@@ -1,0 +1,45 @@
+{
+  "name": "ts-typeorm",
+  "version": "1.1.1",
+  "description": "TS-Express-MongoDB-TypeORM",
+  "main": "app.js",
+  "framework_version": "1.0.0",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "preserve": "npm run build",
+    "serve": "cross-env NODE_ENV=dev concurrently \"tsc --watch\" \"nodemon -L dist/app.js\"",
+    "prestart": "npm run build",
+    "start": "cross-env NODE_ENV=test node dist/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "rimraf": "./node_modules/rimraf/bin.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/body-parser": "^1.19.2",
+    "@types/express": "^4.17.13",
+    "@types/uuid": "^8.3.4",
+    "axios": "^0.21.1",
+    "body-parser": "^1.20.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.2",
+    "express": "^4.18.1",
+    "helmet": "^6.0.0",
+    "install": "^0.13.0",
+    "jwt-decode": "^3.1.2",
+    "lodash.startcase": "^4.4.0",
+    "mongodb": "^3.7.3",
+    "mysql": "^2.18.1",
+    "npm": "^8.19.1",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.2",
+    "typeorm": "^0.3.9",
+    "typescript": "^4.8.3",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.7",
+    "concurrently": "^7.4.0",
+    "nodemon": "^2.0.19"
+  }
+}

@@ -1,0 +1,66 @@
+import e, { Request, Response, NextFunction } from 'express';
+const axios = require('axios').default;
+import jwt_decode, { JwtPayload } from "jwt-decode";
+import { db } from '../database/databaseConnector';
+import { Settings } from '../database/entities/Settings';
+import { Users } from '../database/entities/Users';
+import { Accounts } from '../database/entities/Accounts';
+import { ObjectID } from 'typeorm';
+
+export async function authenticate(req: Request, res: Response, next: NextFunction) {
+    let token = extractToken(req)
+    req.authenticated = false;
+    if (token) {
+        let jwt_decoded = jwt_decode<JwtPayload>(token?.toString()!)
+        if (Date.now() < jwt_decoded?.exp! * 1000) {
+            req.authenticated = true;
+            req.user = await getUserFromDatabase(jwt_decoded?.sub!);
+            req.jwt_decode = jwt_decoded;
+            if (req.user != null) {
+                req.account = await getAccountFromDatabase(req.user.account);
+            }
+            let apiSettings = await getApiSettings(req.account);
+            if(apiSettings) {
+              req.apiKey = apiSettings.apiKey;
+              req.apiUrl = apiSettings.apiUrl;
+            }
+
+        }
+    }
+    return next();
+}
+
+function extractToken(req: Request) {
+    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        return req.headers.authorization.split(' ')[1];
+    } else if (req.query && req.query.token) {
+        return req.query.token
+    }
+    return null;
+}
+
+async function getAccountFromDatabase(account_id: ObjectID) {
+    const accountsRepo = await db.getRepository(Accounts);
+    let account = await accountsRepo.findOneBy({_id: account_id});
+    return account;
+
+}
+
+async function getUserFromDatabase(sub: string) {
+    const usersRepo = await db.getRepository(Users);
+    let user = await usersRepo.findOneBy({ remote_id: sub });
+    return user;
+}
+
+async function getApiSettings(account: any) {
+    if (!account)
+        return null;
+
+    const settingsRepo = await db.getRepository(Settings);
+    let apiKey = await settingsRepo.findOneBy({ account: account._id, setting_slug: 'api_key' });
+    let apiUrl = await settingsRepo.findOneBy({ account: account._id, setting_slug: 'api_url' });
+    if(apiKey !== null && apiUrl !== null) {
+        return {apiKey: apiKey.setting_value, apiUrl: apiUrl.setting_value};
+    }
+    return null;
+}
